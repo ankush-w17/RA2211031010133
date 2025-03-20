@@ -1,40 +1,26 @@
-import React, { useEffect, useState } from 'react';
-import { fetchPosts } from '../services/api';
-
-interface Post {
-  id: string;
-  userId: string;
-  content: string;
-  timestamp: string;
-}
+// src/pages/Feed.tsx
+import React, { useEffect, useState } from "react";
+import { useDataContext } from "../context/DataContext";
 
 const Feed: React.FC = () => {
-  const [posts, setPosts] = useState<Post[]>([]);
+  const dataContext = useDataContext();
+  const { posts, users } = dataContext!;
+  const [sortedPosts, setSortedPosts] = useState(posts);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const data = await fetchPosts();
-      // Sort posts by timestamp in descending order
-      const sortedPosts = data.sort(
-        (a: Post, b: Post) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      );
-      setPosts(sortedPosts);
-    };
-
-    fetchData();
-
-    // Set up a polling mechanism to fetch new posts every 30 seconds
-    const intervalId = setInterval(fetchData, 30000);
-    return () => clearInterval(intervalId);
-  }, []);
+    // Sort posts newest first
+    const sorted = [...posts].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    setSortedPosts(sorted);
+  }, [posts]);
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Feed</h1>
-      {posts.map((post) => (
-        <div key={post.id} className="bg-white shadow-md rounded-lg p-4 mb-4">
-          <p className="text-gray-700">{post.content}</p>
-          <p className="text-gray-500 text-sm">{new Date(post.timestamp).toLocaleString()}</p>
+    <div className="p-4">
+      <h1 className="text-xl font-bold mb-4">Feed</h1>
+      {sortedPosts.map((post) => (
+        <div key={post.id} className="border rounded p-3 mb-3 shadow">
+          <p className="font-semibold">{users[post.userId]}</p>
+          <p>{post.content}</p>
+          <p className="text-sm text-gray-600">{new Date(post.timestamp).toLocaleString()}</p>
         </div>
       ))}
     </div>

@@ -1,23 +1,22 @@
-import axios from 'axios';
+// src/services/api.ts
+import axios from "axios";
 
-const BASE_URL = 'http://20.244.56.144/test';
+const BASE_URL = "http://20.244.56.144/test";
 
-export const fetchPosts = async () => {
-  try {
-    const response = await axios.get(`${BASE_URL}/posts`);
-    return response.data.posts;
-  } catch (error) {
-    console.error('Error fetching posts:', error);
-    return [];
-  }
+// Fetch all users
+export const fetchUsers = async () => {
+  const response = await axios.get(`${BASE_URL}/users`);
+  return response.data.users;
 };
 
-export const fetchComments = async (postId: string) => {
-  try {
-    const response = await axios.get(`${BASE_URL}/posts/${postId}/comments`);
-    return response.data.comments;
-  } catch (error) {
-    console.error(`Error fetching comments for post ${postId}:`, error);
-    return [];
-  }
+// Fetch all posts
+export const fetchPosts = async () => {
+  const response = await axios.get(`${BASE_URL}/posts`);
+  return response.data.posts;
+};
+
+// Fetch comments for a specific post
+export const fetchComments = async (postId: number) => {
+  const response = await axios.get(`${BASE_URL}/comments/${postId}`);
+  return response.data.comments;
 };

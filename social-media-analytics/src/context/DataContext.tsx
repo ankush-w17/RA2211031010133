@@ -1,45 +1,67 @@
 // src/context/DataContext.tsx
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { fetchUsers, fetchPosts, fetchComments } from '../services/api';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { fetchUsers, fetchPosts, fetchComments } from "../services/api";
 
-interface DataContextProps {
-  users: Record<string, string>;
-  posts: any[];
-  comments: any[];
+interface User {
+  id: number;
+  name: string;
 }
 
-const DataContext = createContext<DataContextProps | undefined>(undefined);
+interface Post {
+  id: number;
+  userId: number;
+  content: string;
+  timestamp: string;
+}
+
+interface Comment {
+  id: number;
+  postId: number;
+  content: string;
+}
+
+interface DataContextType {
+  users: Record<number, string>;
+  posts: Post[];
+  comments: Record<number, Comment[]>;
+  loadComments: (postId: number) => void;
+}
+
+const DataContext = createContext<DataContextType | null>(null);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [users, setUsers] = useState<Record<string, string>>({});
-  const [posts, setPosts] = useState<any[]>([]);
-  const [comments, setComments] = useState<any[]>([]);
+  const [users, setUsers] = useState<Record<number, string>>({});
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [comments, setComments] = useState<Record<number, Comment[]>>({});
 
   useEffect(() => {
-    const fetchData = async () => {
-      const [usersData, postsData, commentsData] = await Promise.all([
-        fetchUsers(),
-        fetchPosts(),
-        fetchComments(),
-      ]);
-      setUsers(usersData);
-      setPosts(postsData);
-      setComments(commentsData);
+    const loadUsers = async () => {
+      const fetchedUsers = await fetchUsers();
+      setUsers(fetchedUsers);
     };
-    fetchData();
+
+    const loadPosts = async () => {
+      const fetchedPosts = await fetchPosts();
+      setPosts(fetchedPosts);
+    };
+
+    loadUsers();
+    loadPosts();
   }, []);
 
+  const loadComments = async (postId: number) => {
+    const fetchedComments = await fetchComments(postId);
+    setComments((prev) => ({
+      ...prev,
+      [postId]: fetchedComments,
+    }));
+  };
+
   return (
-    <DataContext.Provider value={{ users, posts, comments }}>
+    <DataContext.Provider value={{ users, posts, comments, loadComments }}>
       {children}
     </DataContext.Provider>
   );
 };
 
-export const useData = () => {
-  const context = useContext(DataContext);
-  if (!context) {
-    throw new Error('useData must be used within a DataProvider');
-  }
-  return context;
-};
+export const useDataContext = () => useContext(DataContext);
