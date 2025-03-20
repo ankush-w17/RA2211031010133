@@ -1,11 +1,32 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from 'react-router-dom';
 
-const Navbar = () => (
-  <nav className="bg-blue-600 p-4 flex justify-center space-x-6 text-white">
-    <Link to="/">Top Users</Link>
-    <Link to="/trending">Trending Posts</Link>
-    <Link to="/feed">Feed</Link>
-  </nav>
-);
+const Navbar = () => {
+  const navItems = [
+    { name: 'Top Users', path: '/' },
+    { name: 'Trending Posts', path: '/trending' },
+    { name: 'Feed', path: '/feed' },
+  ];
+
+  return (
+    <nav className="bg-blue-600 p-4">
+      <ul className="flex justify-center space-x-8">
+        {navItems.map((item) => (
+          <li key={item.name}>
+            <NavLink
+              to={item.path}
+              className={({ isActive }) =>
+                isActive
+                  ? 'text-white border-b-2 border-white'
+                  : 'text-blue-200 hover:text-white'
+              }
+            >
+              {item.name}
+            </NavLink>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+};
 
 export default Navbar;

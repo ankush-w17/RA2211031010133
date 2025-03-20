@@ -1,22 +1,46 @@
-import { useData } from "../context/DataContext";
-import PostCard from "../components/PostCard";
+import React, { useEffect, useState } from 'react';
+import { fetchPosts, fetchComments } from '../services/api';
 
-const TrendingPosts = () => {
-  const data = useData();
-  if (!data) return null;
+interface Post {
+  id: string;
+  userId: string;
+  content: string;
+}
 
-  const commentCount: Record<string, number> = {};
-  data.comments.forEach(comment => {
-    commentCount[comment.postId] = (commentCount[comment.postId] || 0) + 1;
-  });
+interface PostWithComments extends Post {
+  commentCount: number;
+}
 
-  const maxCount = Math.max(...Object.values(commentCount));
-  const trendingPosts = data.posts.filter(post => commentCount[post.id] === maxCount);
+const TrendingPosts: React.FC = () => {
+  const [trendingPosts, setTrendingPosts] = useState<PostWithComments[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const posts = await fetchPosts();
+      const postsWithComments = await Promise.all(
+        posts.map(async (post: Post) => {
+          const comments = await fetchComments(post.id);
+          return { ...post, commentCount: comments.length };
+        })
+      );
+      // Find the maximum comment count
+      const maxComments = Math.max(...postsWithComments.map((post) => post.commentCount));
+      // Filter posts that have the maximum comment count
+      const trending = postsWithComments.filter((post) => post.commentCount === maxComments);
+      setTrendingPosts(trending);
+    };
+
+    fetchData();
+  }, []);
 
   return (
-    <div className="p-4">
-      {trendingPosts.map(post => (
-        <PostCard key={post.id} post={post} commentsCount={commentCount[post.id]} userName={data.users[post.userId]} />
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Trending Posts</h1>
+      {trendingPosts.map((post) => (
+        <div key={post.id} className="bg-white shadow-md rounded-lg p-4 mb-4">
+          <p className="text-gray-700">{post.content}</p>
+          <p className="text-gray-500 text-sm">Comments: {post.commentCount}</p>
+        </div>
       ))}
     </div>
   );

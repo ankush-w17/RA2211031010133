@@ -1,24 +1,34 @@
-import { useData } from "../context/DataContext";
-import UserCard from "../components/UserCard";
+// src/pages/TopUsers.tsx
+import React from 'react';
+import { useData } from '../context/DataContext';
 
-const TopUsers = () => {
-  const data = useData();
-  if (!data) return null;
+const TopUsers: React.FC = () => {
+  const { users, posts } = useData();
 
-  const userPostCount: Record<string, number> = {};
-  data.posts.forEach(post => {
-    userPostCount[post.userId] = (userPostCount[post.userId] || 0) + 1;
-  });
+  const userPostCounts: Record<string, number> = posts.reduce((acc, post) => {
+    acc[post.user_id] = (acc[post.user_id] || 0) + 1;
+    return acc;
+  }, {});
 
-  const topUsers = Object.entries(userPostCount)
+  const topUsers = Object.entries(userPostCounts)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+    .slice(0, 5)
+    .map(([userId]) => ({
+      id: userId,
+      name: users[userId],
+      postCount: userPostCounts[userId],
+    }));
 
   return (
-    <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-      {topUsers.map(([userId, count]) => (
-        <UserCard key={userId} name={data.users[userId]} count={count} />
-      ))}
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Top 5 Users by Number of Posts</h1>
+      <ul>
+        {topUsers.map(user => (
+          <li key={user.id} className="mb-2">
+            <span className="font-semibold">{user.name}</span> - {user.postCount} posts
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
